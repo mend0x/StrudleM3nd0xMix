@@ -1,0 +1,284 @@
+// ==========================================
+// NEON PURSUIT — 144 BPM
+// ==========================================
+
+setcps(144 / 60 / 4)
+
+// ==========================================
+// CONTROLES
+// ==========================================
+
+// 1 = estructura automática
+// 0 = todas las capas, control manual
+const AUTO = slider(1, 0, 1, 1)
+
+const MASTER = slider(0.8, 0, 1)
+
+// Interruptores
+const ON_KICK = slider(1, 0, 1, 1)
+const ON_BASS = slider(1, 0, 1, 1)
+const ON_ARP = slider(1, 0, 1, 1)
+const ON_LEAD = slider(1, 0, 1, 1)
+const ON_PAD = slider(1, 0, 1, 1)
+const ON_DRUMS = slider(1, 0, 1, 1)
+
+// Volúmenes
+const V_KICK = slider(1.2, 0, 1.2)
+const V_BASS = slider(0.7, 0, 0.7)
+const V_ARP = slider(0.25, 0, 0.65)
+const V_LEAD = slider(0.3393, 0, 0.65)
+const V_PAD = slider(0.3, 0, 0.3)
+const V_DRUMS = slider(0.5, 0, 0.5)
+
+// Carácter del bajo
+const DRIVE = slider(2.456, 0, 4)
+const BASS_CUTOFF = slider(650, 150, 2400)
+const BASS_ENV = slider(7, 0, 7)
+
+// Sonido metálico del arpegio
+const METAL = slider(2, 0, 6)
+const ARP_CUTOFF = slider(2300, 400, 6000)
+const ECHO = slider(0.25, 0, 0.6)
+
+// Lead
+const LEAD_CUTOFF = slider(2600, 500, 6000)
+const LEAD_DRIVE = slider(0.8, 0, 3)
+const WIDTH = slider(0.8, 0, 1)
+
+// Bombeo
+const PUMP = slider(0.78, 0, 1)
+
+// ==========================================
+// ESTRUCTURA — 64 COMPASES
+//
+//  0–7  : intro
+//  8–15 : entra el bajo
+// 16–31 : primer estribillo
+// 32–39 : pausa
+// 40–47 : reconstrucción
+// 48–63 : regreso
+// ==========================================
+
+const SONG_KICK = pick([
+  "1",
+  "<0!4 1!28 0!8 1!24>",
+], AUTO)
+
+const SONG_BASS = pick([
+  "1",
+  "<0!8 1!24 0!8 1!24>",
+], AUTO)
+
+const SONG_ARP = pick([
+  "1",
+  "<1!32 0!4 1!28>",
+], AUTO)
+
+const SONG_LEAD = pick([
+  "1",
+  "<0!16 1!16 0!16 1!16>",
+], AUTO)
+
+const SONG_DRUMS = pick([
+  "1",
+  "<0!8 1!24 0!8 1!24>",
+], AUTO)
+
+// Solo aparece al final de las subidas
+const SONG_ROLL = pick([
+  "0",
+  "<0!14 1!2 0!30 1!2 0!16>",
+], AUTO)
+
+//Bomboclat
+$kick: s("bd")
+  .bank("RolandTR909")
+  .struct("<[x x x x] [x x x x] [x x x x] [x x x [x x]]>")
+  .gain(V_KICK)
+  .postgain(MASTER)
+  .mask(ON_KICK)
+  .mask(SONG_KICK)
+  .orbit(0)
+  .duck("2:3:4:5")
+  .duckattack(0.18)
+  .duckdepth(PUMP)
+  ._scope()
+
+//Bajo mi menor
+$bass: note("<e2 e2 c2 c2 g1 g1 d2 d2>")
+  .struct("~ x x x ~ x x x ~ x x x ~ x x x")
+  .s("sawtooth")
+  .attack(0.004)
+  .decay(0.1)
+  .sustain(0.15)
+  .release(0.04)
+  .lpf(BASS_CUTOFF)
+  .lpenv(BASS_ENV)
+  .lpq(2)
+  .distort(DRIVE)
+  .gain(V_BASS)
+  .postgain(MASTER)
+  .mask(ON_BASS)
+  .mask(SONG_BASS)
+  .orbit(2)
+  ._punchcard({ height: 110, width: 1000 })
+
+//Arpegio
+const arpNotes = [
+  "e4 b3 g4 b3 e4 b4 g4 fs4",
+  "e4 g4 b4 g4 fs4 e4 b3 d4",
+  "e4 g3 c4 g4 e4 d4 c4 b3",
+  "g4 e4 c4 e4 d4 c4 g3 b3",
+  "d4 g3 b3 d4 g4 d4 b3 a3",
+  "b3 d4 g4 a4 g4 d4 b3 d4",
+  "fs4 a3 d4 a4 fs4 e4 d4 a3",
+  "a4 fs4 e4 d4 fs4 e4 d4 fs4",
+]
+
+$arp: note(pick(arpNotes, "<0 1 2 3 4 5 6 7>"))
+  .s("sine")
+  .fm(METAL)
+  .fmh(2)
+  .attack(0.002)
+  .decay(0.13)
+  .sustain(0)
+  .release(0.07)
+  .hpf(250)
+  .lpf(ARP_CUTOFF)
+  .delay(ECHO)
+  .delaytime(0.3125)
+  .delayfeedback(0.32)
+  .room(0.22)
+  .pan("0.35 0.65")
+  .gain(V_ARP)
+  .postgain(MASTER)
+  .mask(ON_ARP)
+  .mask(SONG_ARP)
+  .orbit(3)
+  ._pianoroll()
+
+//Estribillo
+const leadNotes = [
+  "b4@2 ~ g4 b4@2 e5 d5",
+  "b4@3 a4 g4@2 fs4 e4",
+  "g4@2 e4 g4 c5@2 b4 g4",
+  "e4@3 d4 e4 g4@2 ~",
+  "d5@2 b4 a4 b4@2 g4 a4",
+  "b4 d5@2 b4 a4@2 g4 ~",
+  "a4@2 fs4 a4 d5@2 e5 d5",
+  "a4 fs4 e4 fs4 e4@3 ~",
+]
+
+$lead: note(pick(leadNotes, "<0 1 2 3 4 5 6 7>"))
+  .s("supersaw")
+  .unison(5)
+  .detune(0.22)
+  .spread(WIDTH)
+  .attack(0.008)
+  .decay(0.16)
+  .sustain(0.45)
+  .release(0.12)
+  .hpf(300)
+  .lpf(LEAD_CUTOFF)
+  .lpenv(1)
+  .distort(LEAD_DRIVE)
+  .delay(0.18)
+  .delaytime(0.3125)
+  .delayfeedback(0.25)
+  .room(0.25)
+  .gain(V_LEAD)
+  .postgain(MASTER)
+  .mask(ON_LEAD)
+  .mask(SONG_LEAD)
+  .orbit(4)
+  ._pianoroll()
+
+// ==========================================
+// FONDO ARMÓNICO
+// También sostiene la pausa central
+// ==========================================
+
+$pad: note("<[e3,g3,b3,fs4] [e3,g3,b3,fs4] [c3,e3,g3,b3] [c3,e3,g3,b3] [g3,b3,d4,a4] [g3,b3,d4,a4] [d3,fs3,a3,e4] [d3,fs3,a3,e4]>")
+  .s("supersaw")
+  .unison(3)
+  .detune(0.3)
+  .spread(0.9)
+  .attack(0.35)
+  .decay(0.2)
+  .sustain(0.65)
+  .release(0.6)
+  .hpf(350)
+  .lpf(slider(1100, 400, 3500))
+  .room(0.6)
+  .gain(V_PAD)
+  .postgain(MASTER)
+  .mask(ON_PAD)
+  .orbit(5)
+
+// ==========================================
+// BATERÍA
+// ==========================================
+
+$clap: s("<[~ cp ~ cp] [~ cp ~ cp] [~ cp ~ cp] [~ cp ~ [cp cp]]>")
+  .bank("RolandTR909")
+  .hpf(650)
+  .gain(V_DRUMS.mul(1.2))
+  .postgain(MASTER)
+  .mask(ON_DRUMS)
+  .mask(SONG_DRUMS)
+  .orbit(1)
+
+$closed: s("hh*16")
+  .bank("RolandTR909")
+  .hpf(6500)
+  .gain(V_DRUMS.mul("0.4 0.65 0.45 0.85"))
+  .pan("0.4 0.6")
+  .postgain(MASTER)
+  .mask(ON_DRUMS)
+  .mask(SONG_DRUMS)
+  .orbit(1)
+
+$open: s("~ oh ~ oh ~ oh ~ oh")
+  .bank("RolandTR909")
+  .speed(1.2)
+  .hpf(7000)
+  .gain(V_DRUMS.mul(0.8))
+  .postgain(MASTER)
+  .mask(ON_DRUMS)
+  .mask(SONG_DRUMS)
+  .orbit(1)
+
+$metalPerc: s("<[rim ~ ~ rim ~ rim ~ ~] [~ rim ~ ~ rim ~ rim ~]>")
+  .bank("RolandTR808")
+  .speed("<1.2 0.8 1.5 1>")
+  .hpf(1000)
+  .pan("0.2 0.8")
+  .gain(V_DRUMS.mul(0.55))
+  .postgain(MASTER)
+  .mask(ON_DRUMS)
+  .mask(SONG_DRUMS)
+  .orbit(1)
+
+// ==========================================
+// REMATE ANTES DE CADA ESTRIBILLO
+// ==========================================
+
+$roll: s("<sd*8 [sd*16 ~]>")
+  .bank("RolandTR909")
+  .hpf(1000)
+  .gain("<0.12 0.18>")
+  .postgain(MASTER)
+  .mask(SONG_ROLL)
+  .orbit(6)
+
+$noise: s("white*8")
+  .attack(0.01)
+  .decay(0.15)
+  .sustain(0)
+  .release(0.1)
+  .hpf(2000)
+  .lpf("<3500 7000>")
+  .gain("<0.025 0.045>")
+  .postgain(MASTER)
+  .mask(SONG_ROLL)
+  .orbit(6)
