@@ -1,0 +1,251 @@
+setcps(140 / 60 / 4)
+
+// ==========================================
+// MESA DE CONTROL
+// Interruptores: 0 = apagado, 1 = encendido
+// ==========================================
+
+// Volumen general
+const MASTER = slider(1, 0, 1)
+
+// Encender y apagar capas
+const ON_KICK = slider(1, 0, 1, 1)
+const ON_BASS = slider(1, 0, 1, 1)
+const ON_ARP = slider(1, 0, 1, 1)
+const ON_CHORDS = slider(1, 0, 1, 1)
+const ON_PERC = slider(0, 0, 1, 1)
+const ON_HATS = slider(1, 0, 1, 1)
+
+// Activa la subida; vuelve a 0 para soltarla
+const SUBIDA = slider(0, 0, 1, 1)
+
+// Volúmenes individuales
+const V_KICK = slider(0.3374, 0, 1.4)
+const V_BASS = slider(0.168, 0, 0.8)
+const V_ARP = slider(0.5744, 0, 0.8)
+const V_CHORDS = slider(0.27895, 0, 0.35)
+const V_PERC = slider(0.28, 0, 0.7)
+const V_HATS = slider(0.16, 0, 0.5)
+
+// Agresividad y brillo
+const BASS_DRIVE = slider(1.4, 0, 4)
+const BASS_FILTER = slider(1200, 200, 3000)
+const BASS_RESONANCE = slider(2, 0, 8)
+
+const ARP_ENV = slider(4.5, 0, 8)
+const ARP_FILTER = slider(300, 150, 1800)
+const ARP_DRIVE = slider(0.7, 0, 3)
+const ARP_RELEASE = slider(0.04, 0.01, 0.3)
+
+// Espacio y amplitud
+const ARP_REVERB = slider(0.22, 0, 0.8)
+const ARP_DELAY = slider(0.16, 0, 0.5)
+const ARP_WIDTH = slider(0.7, 0, 1)
+
+// Bombeo con el bombo
+const DUCK_DEPTH = slider(0.8, 0, 1)
+const DUCK_TIME = slider(0.2, 0.05, 0.35)
+
+// Ritmo del bombo:
+// 0 = cuatro golpes
+// 1 = cuatro golpes con remate
+// 2 = ritmo roto
+const KICK_MODE = slider(1, 0, 2, 1)
+
+// Densidad del arpegio:
+// 0 = ligero, 1 = original, 2 = ráfagas
+const ARP_MODE = slider(1, 0, 2, 1)
+
+// ==========================================
+// PATRONES
+// ==========================================
+
+const kickPatterns = [
+  "x*4",
+  "<[x x x x] [x x x x] [x x x x] [x x x [x x]]>",
+  "x ~ ~ x ~ ~ x ~ x ~ x ~ ~ x ~ x",
+]
+
+const arpeggiator = [
+  "{d4 bb3 eb3 d3 bb2 eb2}%16",
+  "{c4 bb3 f3 c3 bb2 f2}%16",
+  "{d4 bb3 g3 d3 bb2 g2}%16",
+  "{c4 bb3 f3 c3 bb2 f2}%16",
+]
+
+const arpRhythms = [
+  "1 0 1 0 1 0 1 0",
+  "1",
+  "<[1 1 0 1] [1 0 1 1] [1] [1 1 1 0]>",
+]
+
+// ==========================================
+// BOMBO
+// ==========================================
+
+$kick: s("bd")
+  .struct(pick(kickPatterns, KICK_MODE))
+  .gain(V_KICK)
+  .postgain(MASTER)
+  .mask(ON_KICK)
+  .orbit(0)
+  .duck("2:3:4")
+  .duckattack(DUCK_TIME)
+  .duckdepth(DUCK_DEPTH)
+  ._scope()
+
+// ==========================================
+// BAJO ORIGINAL, SECO Y CON DISTORSIÓN
+// ==========================================
+
+$bass: note("[eb1,eb2]!16 [f2,f1]!16 [g2,g1]!16 [f2,f1]!8 [bb2,bb1]!8")
+  .s("supersaw")
+  .slow(8)
+  .attack(0.005)
+  .decay(0.15)
+  .sustain(0.3)
+  .release(0.06)
+  .lpf(BASS_FILTER)
+  .lpq(BASS_RESONANCE)
+  .distort(BASS_DRIVE)
+  .gain(V_BASS)
+  .postgain(MASTER)
+  .mask(ON_BASS)
+  .orbit(2)
+  ._punchcard({ height: 130, width: 1000 })
+
+// ==========================================
+// ARPEGIO DESCENDENTE
+// ==========================================
+
+$arp: note(pick(arpeggiator, "<0 1 2 3>".slow(2)))
+  .s("supersaw")
+  .unison(3)
+  .detune(0.18)
+  .spread(ARP_WIDTH)
+  .attack(0.003)
+  .decay(0.1)
+  .sustain(0.4)
+  .release(ARP_RELEASE)
+  .hpf(180)
+  .lpf(ARP_FILTER)
+  .lpenv(ARP_ENV)
+  .lpq(2)
+  .distort(ARP_DRIVE)
+  .room(ARP_REVERB)
+  .delay(ARP_DELAY)
+  .delaytime(0.3214)
+  .delayfeedback(0.28)
+  .mask(pick(arpRhythms, ARP_MODE))
+  .gain(V_ARP)
+  .postgain(MASTER)
+  .mask(ON_ARP)
+  .orbit(3)
+  ._punchcard({ height: 180, width: 1000 })
+
+// ==========================================
+// ACORDES: APOYO ARMÓNICO CON CONTRATIEMPOS
+// Siguen los ocho compases del bajo
+// ==========================================
+
+$chords: note("<[eb4,g4,bb4] [eb4,g4,bb4] [f4,bb4,c5] [f4,bb4,c5] [g4,bb4,d5] [g4,bb4,d5] [f4,bb4,c5] [bb3,d4,f4]>")
+  .struct("~ x ~ x ~ x ~ [x x]")
+  .s("supersaw")
+  .unison(3)
+  .detune(0.25)
+  .spread(0.85)
+  .attack(0.01)
+  .decay(0.18)
+  .sustain(0.25)
+  .release(0.12)
+  .hpf(450)
+  .lpf(slider(2200, 600, 5000))
+  .room(0.35)
+  .gain(V_CHORDS)
+  .postgain(MASTER)
+  .mask(ON_CHORDS)
+  .orbit(4)
+
+// ==========================================
+// PALMAS Y REMATES
+// ==========================================
+
+$clap: s("<[~ cp ~ cp] [~ cp ~ cp] [~ cp ~ cp] [~ cp ~ [cp cp]]>")
+  .bank("RolandTR808")
+  .hpf(650)
+  .gain(V_PERC)
+  .postgain(MASTER)
+  .mask(ON_PERC)
+  .orbit(1)
+
+$rim: s("{~ ~ rim ~ cp ~ rim cp ~!2 rim ~ cp ~ <rim ~>!2}%8")
+  .bank("RolandTR808")
+  .speed(1.2)
+  .fast(2)
+  .hpf(900)
+  .pan("0.3 0.7")
+  .gain(V_PERC.mul(0.45))
+  .postgain(MASTER)
+  .mask(ON_PERC)
+  .orbit(1)
+
+// ==========================================
+// CHARLES Y SHAKER
+// ==========================================
+
+$hats: s("hh*16")
+  .bank("RolandTR808")
+  .speed(1.1)
+  .hpf(6500)
+  .gain(V_HATS.mul("0.55 0.85 0.65 1"))
+  .pan("0.4 0.6")
+  .postgain(MASTER)
+  .mask(ON_HATS)
+  .orbit(1)
+
+$openhat: s("~ oh ~ oh ~ oh ~ oh")
+  .bank("RolandTR808")
+  .speed(1.1)
+  .release(0.06)
+  .hpf(7000)
+  .gain(V_HATS.mul(0.85))
+  .postgain(MASTER)
+  .mask(ON_HATS)
+  .orbit(1)
+
+$shaker: s("hh")
+  .bank("RolandTR808")
+  .struct("<[x!3 ~!2 x!10 ~] [~ x x ~ x x x ~]>")
+  .speed(1.6)
+  .hpf(8000)
+  .pan("0.2 0.8")
+  .gain(V_HATS.mul(0.45))
+  .postgain(MASTER)
+  .mask(ON_HATS)
+  .orbit(1)
+
+// ==========================================
+// SUBIDA MANUAL
+// Activa SUBIDA = 1 durante unos compases.
+// Desactívala para volver al groove.
+// ==========================================
+
+$roll: s("<sd*4 sd*4 sd*8 sd*8 sd*16 sd*16 sd*32 [sd*16 ~]>")
+  .bank("RolandTR808")
+  .hpf(900)
+  .gain("<0.1 0.12 0.14 0.16 0.18 0.2 0.22 0.18>")
+  .postgain(MASTER)
+  .mask(SUBIDA)
+  .orbit(5)
+
+$rise: s("white*16")
+  .attack(0.02)
+  .decay(0.1)
+  .sustain(0)
+  .release(0.08)
+  .hpf(1200)
+  .lpf("<1500 1800 2200 3000 4000 5500 7500 9500>")
+  .gain("<0.015 0.02 0.025 0.03 0.04 0.05 0.06 0.035>")
+  .postgain(MASTER)
+  .mask(SUBIDA)
+  .orbit(5)
