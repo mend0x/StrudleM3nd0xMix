@@ -1,0 +1,36 @@
+setCpm(136/4)
+register('acidenv', (x, pat) => pat.lpf(100).lpenv(x * 9).lps(.2).lpd(.12))
+
+//Mode de tranceeee
+//$: n("<0 4 0 9 7>*16").scale("g:minor").trans(-12).o(3).s("sawtooth").acidenv(slider(0.701))._pianoroll()
+//$: n("<0 4 0 9 7>*16".add("<7 _ _ 6 5 _ _ 6>*2")).scale("g:minor").trans(-12).o(3).s("sawtooth").acidenv(slider(1))._pianoroll()
+// LEAD 3 - RAVE DROP
+//$: n("<0 4 0 9 8>*16".add("<7 _ _ 6 5 _ _ 6>*2")).scale("g:minor").trans(-12).o(5).s("supersaw").acidenv(slider(0.9)).hpf(350).distort("2:.5").delay(.22).room(.18).gain(slider(.55,0,1))._pianoroll()
+
+//Acompañamiento
+//$: n("~ [0,7] ~ [4,11] ~ [7,14] [9,16] ~ ~ [7,14] ~ [4,11] ~ [0,7] [4,11] ~".add("<7 _ _ 6 5 _ _ 6>*2")).scale("g:minor").trans(-12).o(5).s("supersaw").attack(.005).decay(.12).sustain(.35).release(.09).hpf(350).lpf(slider(4200,1000,8000)).delay(.125).room(.15).gain(slider(.35,0,.8))._pianoroll()
+
+
+//Bajo
+//$: n("<0>*16").scale("g:minor").trans(-24).o(4).s("sawtooth").acidenv(slider(0.559))._pianoroll()
+
+//Bombo
+//$: s("bd:2!4").duck("3:4:5:6").duckdepth(.8).duckattack(.16)._scope()//Bombo V2
+// Efecto
+//$: s("white!4").att(.4).o(6).acidenv(slider(0.629))._scope()
+
+
+
+samples('shabda/speech:forever,tonight')
+// VOCAL TRANCE
+//$: s("~ forever ~ tonight").slow(2).speed("<1 1.15 0.9 1>").room(.7).delay(.35).gain(slider(0.6))
+
+//Cheap lead
+//$: n("[7 9] 10 12 [10 9] 7 [9 7] 5 4").scale("g:minor").o(5).s("sawtooth").vowel("u a e u o a e u").attack(.002).decay(.12).sustain(.7).release(.08).hpf(600).lpf(8000).distort("4:.45").vib(5).vibmod(.12).delay(.15).room(.16).gain(slider(0.287,0,1)).orbit(3)._pianoroll()
+//$: n("[7 9] 10").scale("g:minor").o(5).s("sawtooth").vowel("u a e u o a e u").attack(.002).decay(.12).sustain(.7).release(.08).hpf(600).lpf(8000).distort("4:.45").vib(5).vibmod(.12).delay(.15).room(.16).gain(slider(0.094,0,1)).orbit(3)._pianoroll()
+
+
+
+
+
+
